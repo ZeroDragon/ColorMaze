@@ -1,0 +1,73 @@
+<div id="legame"></div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript">
+var ColorMaze = {
+	cont : null,
+	session : function(){
+		if(localStorage.cm == undefined) localStorage.cm = JSON.stringify({user:'guest',level:3});
+		return JSON.parse(localStorage.cm);
+	},
+	savesession:function(obj){
+		localStorage.cm = JSON.stringify(obj);
+		this.init(this.cont);
+	},
+	factor : function(){return this.session().level},
+	drawmaze : function(learray){
+		this.cont.html('');
+		max = ($(window).height()<=$(window).width()) ? $(window).height() : $(window).width();
+		this.cont.height((90*max)/100);
+		this.cont.width($('#legame').height());
+		for(var rows=1; rows<=this.factor(); rows++){
+			this.cont.append(
+				$('<div/>',{
+					class:'rows'
+				})
+			);
+			for(var cols=1; cols<=this.factor();cols++){
+				color =this.colors[learray[rows-1][cols-1]];
+				$('<div/>',{
+					class:'cells',
+					style:'background-color:'+color+';'
+				}).appendTo(this.cont.children('div:last-child'));
+			}
+		}
+		$('.cells').width(this.cont.width()/this.factor());
+		$('.cells').height(this.cont.height()/this.factor());
+	},
+	colors : [
+		'#330000', //blood
+		'#B03E3E', //pink
+		'#B0B13E', //yellow
+		'#40B03E', //green
+		'#B07B3E', //orange
+		'#463EB0', //blue
+		'#B03E93' //purple
+	],
+	learray : null,
+	arrMaze : function(redo){
+		if(redo){
+			var arr = [];
+			for(rows=0;rows<this.factor();rows++){
+				arr[rows]=[];
+				for(cols=0;cols<this.factor();cols++){
+					arr[rows][cols] = Math.floor((Math.random()*6)+1);
+				}
+			}
+		}
+		this.learray = arr.slice();
+		return this.learray;
+	},
+	init : function(cont){
+		this.cont = cont;
+		this.drawmaze(this.arrMaze(true));
+	}
+}
+$(document).ready(function(){
+	ColorMaze.init($('#legame'));
+});
+</script>
+<style>
+.cells{
+	display: inline-block;
+}
+</style>
