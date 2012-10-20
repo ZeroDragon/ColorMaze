@@ -1,243 +1,73 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  
-  <script type="application/javascript">
-var cuadro = 380;
-var factor = 3;
-var home = 10;
-var colores = [];
-colores[0]="#330000"; //rojo kemado
-colores[1]="#B03E3E"; //rosado
-colores[2]="#B0B13E"; //amarillo
-colores[3]="#40B03E"; //verde
-colores[4]="#B07B3E"; //naranja
-colores[5]="#463EB0"; //azul
-colores[6]="#B03E93"; //morado
-var truefalse = [];
-var aha = [];
-var intentos = 0;
-var maximo = 0;
-
-Object.prototype.clone = function() {
-  var newObj = (this instanceof Array) ? [] : {};
-  for (i in this) {
-    if (i == 'clone') continue;
-    if (this[i] && typeof this[i] == "object") {
-      newObj[i] = this[i].clone();
-    } else newObj[i] = this[i]
-  } return newObj;
-};
-
-Array.max = function( array ){
-    return Math.max.apply( Math, array );
-};
-function generatemaze(){
-	var xDimensions = factor;
-	var yDimensions = factor;
-	var someArray = [];
-	for (var xLoop=0; xLoop<xDimensions; xLoop++) {
-		someArray[xLoop] = [];
-		truefalse[xLoop] = [];
-		for (var yLoop=0; yLoop<yDimensions; yLoop++) {
-			var randomnumber=Math.floor(Math.random()*6);
-			someArray[xLoop][yLoop] = randomnumber+1;    // final value for someArray[x][y] goes here
-			truefalse[xLoop][yLoop] = 0;
-		}
-	}
-	someArray[Math.floor((factor-1)/2)][Math.floor((factor-1)/2)] = 0;
-	someArray[Math.floor((factor)/2)][Math.floor((factor)/2)] = 0;
-/*	someArray[0][0] = 0;
-	someArray[factor-1][factor-1] = 0;
-	someArray[0][factor-1] = 0;
-	someArray[factor-1][0] = 0;	*/
-	return someArray;
-}
-function draw(maze) {  
-	var canvas = document.getElementById("canvas");  
-	var grid = document.getElementById("grid");
-	var valid = document.getElementById("valid");
-	if (canvas.getContext) {  
-		var C = canvas.getContext("2d");
-		var G = grid.getContext("2d");
-		var V = valid.getContext("2d");
-		valida(maze);
-		tamano = cuadro/factor;
-		iniciaY = home;
-		for(var ver=0; ver<factor; ver++){
-			iniciaX = home;
-			for(var hor=0; hor<factor; hor++){
-				C.fillStyle = colores[maze[hor][ver]];  
-				C.fillRect (iniciaX, iniciaY, tamano, tamano);
-				G.strokeStyle = colores[maze[hor][ver]]; 
-				G.strokeRect (iniciaX, iniciaY, tamano, tamano);
-				G.fillText (maze[hor][ver],iniciaX+4,iniciaY+tamano/2);
-				V.fillStyle = "#000000";
-				V.strokeRect (iniciaX, iniciaY, tamano, tamano);
-//				V.fillText(truefalse[hor][ver],iniciaX+4,iniciaY+tamano/2);
-				if(truefalse[hor][ver]==2){
-				V.fillStyle = "#CCCCCC";
-				V.fillRect(iniciaX, iniciaY, tamano, tamano);
-				}
-				if(truefalse[hor][ver]==1){
-				V.fillStyle = "#000000";
-				V.fillRect(iniciaX, iniciaY, tamano, tamano);
-				C.fillStyle = colores[0];
-				C.strokeStyle = colores[0];
-//				C.strokeRect (iniciaX-1,iniciaY-1,tamano+2,tamano+2);
-				C.fillRect (iniciaX-1, iniciaY-1, tamano+2, tamano+2);
-				}
-				iniciaX = iniciaX+tamano;
-			}
-			iniciaY = iniciaY+tamano;
-		}
-	}
-	document.getElementById("elmejor").innerHTML = elmejor(maze,truefalse);
-	return maze;
-}
-
-function valida(maze) {
-	for(var ekis=0; ekis<factor; ekis++){
-		for(var ye=0; ye<factor; ye++){
-			if(maze[ekis][ye]==0){
-				if((ye!=factor-1)&&(truefalse[ekis][ye+1]!=1)){truefalse[ekis][ye+1] = 2;}
-				if((ye!=0)&&(truefalse[ekis][ye-1]!=1)){truefalse[ekis][ye-1] = 2;}
-				if((ekis!=0)&&(truefalse[ekis-1][ye]!=1)){truefalse[ekis-1][ye] = 2;}
-				if((ekis!=factor-1)&&(truefalse[ekis+1][ye]!=1)){truefalse[ekis+1][ye] = 2;}	
-				truefalse[ekis][ye] = 1;
+<div id="legame"></div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript">
+var ColorMaze = {
+	cont : null,
+	session : function(){
+		if(localStorage.cm == undefined) localStorage.cm = JSON.stringify({user:'guest',level:3});
+		return JSON.parse(localStorage.cm);
+	},
+	savesession:function(obj){
+		localStorage.cm = JSON.stringify(obj);
+		this.init(this.cont);
+	},
+	factor : function(){return this.session().level},
+	drawmaze : function(learray){
+		this.cont.html('');
+		max = ($(window).height()<=$(window).width()) ? $(window).height() : $(window).width();
+		this.cont.height((90*max)/100);
+		this.cont.width($('#legame').height());
+		for(var rows=1; rows<=this.factor(); rows++){
+			this.cont.append(
+				$('<div/>',{
+					class:'rows'
+				})
+			);
+			for(var cols=1; cols<=this.factor();cols++){
+				color =this.colors[learray[rows-1][cols-1]];
+				$('<div/>',{
+					class:'cells',
+					style:'background-color:'+color+';'
+				}).appendTo(this.cont.children('div:last-child'));
 			}
 		}
-	}
-//	alert(colores[mejor]);
-}
-
-function elmejor(maze,truefalse){
-	var cholor = [];
-	for(var color=1; color<=6; color++){
-		cholor[color] = elige(color,maze.clone(),truefalse.clone());
-	}
-	biggest = 1
-	for (x=1;x<=6;x++){
-//		alert(cholor[biggest]+" y "+cholor[x]);
-		if (cholor[x]>cholor[biggest]){
-			biggest = x;
-		}
-	}
-	return(biggest);
-}
-
-function elige(color,maze2,truefalse2){
-	var cuentale = 0;
-	for(var ekis=0; ekis<factor; ekis++){
-		for(var ye=0; ye<factor; ye++){
-			if(truefalse2[ekis][ye]==2){
-				if(maze2[ekis][ye]==color){
-					var cambio = true;
-					cuentale ++;
-					if((ye!=factor-1)&&(truefalse2[ekis][ye+1]!=1)){truefalse2[ekis][ye+1]=2;}
-					if((ye!=0)&&(truefalse2[ekis][ye-1]!=1)){truefalse2[ekis][ye-1]=2;}
-					if((ekis!=0)&&(truefalse2[ekis-1][ye]!=1)){truefalse2[ekis-1][ye]=2;}
-					if((ekis!=factor-1)&&(truefalse2[ekis+1][ye]!=1)){truefalse2[ekis+1][ye]=2;}
-					truefalse2[ekis][ye]=1;
-					cuentale = cuentale + elige(color,maze2,truefalse2);
+		$('.cells').width(this.cont.width()/this.factor());
+		$('.cells').height(this.cont.height()/this.factor());
+	},
+	colors : [
+		'#330000', //blood
+		'#B03E3E', //pink
+		'#B0B13E', //yellow
+		'#40B03E', //green
+		'#B07B3E', //orange
+		'#463EB0', //blue
+		'#B03E93' //purple
+	],
+	learray : null,
+	arrMaze : function(redo){
+		if(redo){
+			var arr = [];
+			for(rows=0;rows<this.factor();rows++){
+				arr[rows]=[];
+				for(cols=0;cols<this.factor();cols++){
+					arr[rows][cols] = Math.floor((Math.random()*6)+1);
 				}
 			}
 		}
-	}
-	return cuentale;
-}
-function include(arr,obj) {
-    return (arr.indexOf(obj) != -1);
-}
-
-function ganamosquestionmark(truefalse){
-	var salida = true;
-	for(var ekis=0; ekis<factor; ekis++){
-//		alert (ekis+": "+res);
-		if (include(truefalse[ekis],2)){salida = false;}
-	}
-//	alert(salida);
-	return salida;
-}
-function limpia(){
-	var canvas = document.getElementById("canvas");  
-	var grid = document.getElementById("grid");
-	var valid = document.getElementById("valid");
-	var C = canvas.getContext("2d");
-	var G = grid.getContext("2d");
-	var V = valid.getContext("2d");
-	C.clearRect(home,home,cuadro,cuadro);
-	G.clearRect(home,home,cuadro,cuadro);
-	V.clearRect(home,home,cuadro,cuadro);
-}
-function simondice(color){
-	intentos ++;
-	document.getElementById("llevas").innerHTML = intentos;
-	document.getElementById("quedan").innerHTML = maximo-intentos;
-	elige(color,aha,truefalse);
-	aha = draw(aha);
-	if (ganamosquestionmark(truefalse)){
-		if (intentos<=maximo){
-			factor ++;
-			limpia();
-			dispara();
-		}else{
-			limpia();
-			dispara();
-		}
+		this.learray = arr.slice();
+		return this.learray;
+	},
+	init : function(cont){
+		this.cont = cont;
+		this.drawmaze(this.arrMaze(true));
 	}
 }
-function autoplay(aha2,truefalse2){
-	maximo = 1;
-	newaha = aha2.clone();
-	newtruefalse = truefalse2.clone();
-	opcion = elmejor(newaha,newtruefalse);
-	elige(opcion,newaha,newtruefalse);
-//	alert(ganamosquestionmark(newtruefalse));
-	if(ganamosquestionmark(newtruefalse)==false){
-		maximo = maximo + autoplay(newaha,newtruefalse);
-	}
-	return maximo;
+$(document).ready(function(){
+	ColorMaze.init($('#legame'));
+});
+</script>
+<style>
+.cells{
+	display: inline-block;
 }
-function dispara(){
-	aha = draw(generatemaze());
-	intentos = 0;
-	maximo = autoplay(aha,truefalse);
-	document.getElementById("llevas").innerHTML = intentos;
-	document.getElementById("quedan").innerHTML = maximo-intentos;
-	document.getElementById("nivel").innerHTML = factor-2;
-}
-  </script> 
-<style type="text/css">
-canvas{
-	width: 400px;
-	height: 400px;
-	border: 1px solid #000;
-}
-input{
-	margin:1px;
-	border: 1px solid;
-	padding: 0px;
-	width:132px;
-	height:40px;
-}
-table{
-	width:400px;
-	
-}
-
-#cheat,#grid,#valid{ 
-	visibility:hidden; /*quita esto para recibir ayuda y ganar facil*/ 
-	position:absolute; /*tambien para ver el debug*/
-}
-</style>  
- </head>
- <body onload="dispara();">  
-	<canvas id="canvas" width="400" height="400"></canvas> 
-	<canvas id="grid" width="400" height="400"></canvas>
-	<canvas id="valid" width="400" height="400"></canvas><br>
-	<table cellpadding="0" cellspacing="0"><tbody><tr><td width="82%">
-	<span id="cheat">Recomendado: <span id="elmejor">2</span></span>
-	Intentos: <span id="llevas">0</span>
-	Restantes: <span id="quedan">5</span></td><td></td><td align="right">
-	Nivel: <span id="nivel">1</span></td></tr></tbody></table>
-	<input type="button" style="background-color:#B03E3E;" onclick="simondice(1)"><input type="button" style="background-color:#B0B13E;" onclick="simondice(2)"><input type="button" style="background-color:#40B03E;" onclick="simondice(3)"><br><input type="button" style="background-color:#B07B3E;" onclick="simondice(4)"><input type="button" style="background-color:#463EB0;" onclick="simondice(5)"><input type="button" style="background-color:#B03E93;" onclick="simondice(6)">
-   
-  </body></html>
+</style>
