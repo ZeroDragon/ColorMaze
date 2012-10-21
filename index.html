@@ -1,5 +1,15 @@
-<div id="legame"></div>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<div id="lecontent">
+	<div id="legame"></div>
+	<div id="lebuttons">
+		<div id="btn_1"></div>
+		<div id="btn_2"></div>
+		<div id="btn_3"></div>
+		<div id="btn_4"></div>
+		<div id="btn_5"></div>
+		<div id="btn_6"></div>
+	</div>
+</div>
+<script src="jquery.js"></script>
 <script type="text/javascript">
 var ColorMaze = {
 	cont : null,
@@ -12,11 +22,14 @@ var ColorMaze = {
 		this.init(this.cont);
 	},
 	factor : function(){return this.session().level},
-	drawmaze : function(learray){
+	drawmaze : function(elmaze){
 		this.cont.html('');
-		max = ($(window).height()<=$(window).width()) ? $(window).height() : $(window).width();
-		this.cont.height((90*max)/100);
-		this.cont.width($('#legame').height());
+		var min = ($(window).height()<=$(window).width()) ? $(window).height() : $(window).width();
+		var contsize = (80*min)/100;
+		this.cont.height(contsize);
+		this.cont.width(contsize);
+		this.cont.parent().width(contsize);
+		this.cont.parent().height(contsize+60);
 		for(var rows=1; rows<=this.factor(); rows++){
 			this.cont.append(
 				$('<div/>',{
@@ -24,15 +37,16 @@ var ColorMaze = {
 				})
 			);
 			for(var cols=1; cols<=this.factor();cols++){
-				color =this.colors[learray[rows-1][cols-1]];
+				color =this.colors[elmaze[rows-1][cols-1]];
 				$('<div/>',{
 					class:'cells',
-					style:'background-color:'+color+';'
+					style:'background-color:'+color+';display:inline-block;'
 				}).appendTo(this.cont.children('div:last-child'));
 			}
 		}
-		$('.cells').width(this.cont.width()/this.factor());
-		$('.cells').height(this.cont.height()/this.factor());
+		var cellsize = this.cont.width()/this.factor() -1 ;
+		$('.cells').width(cellsize);
+		$('.cells').height(cellsize);
 	},
 	colors : [
 		'#330000', //blood
@@ -43,31 +57,152 @@ var ColorMaze = {
 		'#463EB0', //blue
 		'#B03E93' //purple
 	],
-	learray : null,
-	arrMaze : function(redo){
-		if(redo){
-			var arr = [];
-			for(rows=0;rows<this.factor();rows++){
-				arr[rows]=[];
-				for(cols=0;cols<this.factor();cols++){
-					arr[rows][cols] = Math.floor((Math.random()*6)+1);
+	theMaze : null,
+	theValids : null,
+	creaMaze : function(){
+		var arr = [];
+		var valids = [];
+		for(rows=0;rows<this.factor();rows++){
+			arr[rows]=[];
+			valids[rows]=[];
+			for(cols=0;cols<this.factor();cols++){
+				valids[rows][cols]='blank';
+				arr[rows][cols] = Math.floor((Math.random()*6)+1);
+			}
+		}
+		var middle = Math.floor((this.factor()+1)/2);
+		centro = (this.factor()%2===1) ? [middle-1] : [middle-1,middle];
+		for (var i = centro.length - 1; i >= 0; i--){
+			arr[centro[i]][centro[i]]=0;
+			valids[centro[i]][centro[i]]='actual';
+		};
+		this.theMaze = arr.slice();
+		this.theValids = valids.slice();
+		this.getValids(this.theValids);
+		return this.theMaze;
+	},
+	getValids : function(lasvalids){
+		for (var x = 0; x < lasvalids.length; x++) {
+			for(var y = 0; y < lasvalids[x].length; y++){
+				if(lasvalids[x][y]=='actual'){
+					lasvalids = this.buscaValids(x,y,lasvalids,false);
 				}
 			}
 		}
-		this.learray = arr.slice();
-		return this.learray;
+		this.theValids = lasvalids.slice();
+	},
+	buscaValids : function(x,y,elmaze,color){
+		//buscamos en -y
+		if((x-1)>=0 && elmaze[x-1][y]=='blank'){
+			if(color!==false){
+				colorActual = color;
+				if(this.theMaze[x-1][y]==colorActual) elmaze[x-1][y] = 'posible'
+			}else{
+				colorActual = this.theMaze[x-1][y];
+				elmaze[x-1][y] = 'posible'
+			}
+			if(this.theMaze[x-1][y] == colorActual) elmaze = this.buscaValids(x-1,y,elmaze,colorActual);
+		}
+		//buscamos en + y
+		if((x+1)<=this.factor()-1 && elmaze[x+1][y]=='blank'){
+			if(color!==false){
+				colorActual = color;
+				if(this.theMaze[x+1][y]==colorActual) elmaze[x+1][y] = 'posible'
+			}else{
+				colorActual = this.theMaze[x+1][y];
+				elmaze[x+1][y] = 'posible'
+			}
+			if(this.theMaze[x+1][y] == colorActual) elmaze = this.buscaValids(x+1,y,elmaze,colorActual);
+		}
+		//buscamos en -x
+		if((y-1)>=0 && elmaze[x][y-1]=='blank'){
+			if(color!==false){
+				colorActual = color;
+				if(this.theMaze[x][y-1]==colorActual) elmaze[x][y-1] = 'posible'
+			}else{
+				colorActual = this.theMaze[x][y-1];
+				elmaze[x][y-1] = 'posible'
+			}
+			if(this.theMaze[x][y-1] == colorActual) elmaze = this.buscaValids(x,y-1,elmaze,colorActual);
+		}
+		//buscamos en +x
+		if((y+1)<=this.factor()-1 && elmaze[x][y+1]=='blank'){
+			if(color!==false){
+				colorActual = color;
+				if(this.theMaze[x][y+1]==colorActual) elmaze[x][y+1] = 'posible'
+			}else{
+				colorActual = this.theMaze[x][y+1];
+				elmaze[x][y+1] = 'posible'
+			}
+			if(this.theMaze[x][y+1] == colorActual) elmaze = this.buscaValids(x,y+1,elmaze,colorActual);
+		}
+		return elmaze;
+	},
+	yaGanamos : function(){
+		var arr = this.theValids.slice();
+		retval = true;
+		for(var x = 0; x < arr.length; x++){
+			for(var y = 0; y < arr[x].length; y++){
+				if(arr[x][y]=='posible' || arr[x][y]=='blank'){
+					retval = false;
+					break;
+				}
+			}
+			if(!retval) break;
+		}
+		var nivelActual = this.factor()+1;
+		if(retval==true){
+			alert('Ganaste!. Avanza a nivel: '+nivelActual);
+			this.savesession({user:'guest',level:nivelActual});
+		}
+	},
+	escoge : function(cual){
+		var arr = this.theValids.slice();
+		var maze = this.theMaze.slice();
+		for(var x = 0; x < arr.length; x++){
+			for(var y = 0; y < arr[x].length; y++){
+				if(arr[x][y]=='posible' && maze[x][y]===cual ){
+					maze[x][y]=0;
+					arr[x][y]='actual';
+				}
+			}
+		}
+		this.theValids = arr.slice();
+		this.theMaze = maze.slice();
+		this.getValids(this.theValids);
+		this.drawmaze(this.theMaze);
+		this.yaGanamos();
 	},
 	init : function(cont){
 		this.cont = cont;
-		this.drawmaze(this.arrMaze(true));
+		this.drawmaze(this.creaMaze());
 	}
 }
 $(document).ready(function(){
 	ColorMaze.init($('#legame'));
 });
+$('#lebuttons div').click(function(){
+	number = parseInt($(this).attr('id').split('_')[1],10);
+	ColorMaze.escoge(number);
+});
 </script>
-<style>
-.cells{
-	display: inline-block;
-}
+<style type="text/css">
+	#lecontent{
+		padding:10px;
+		border:1px solid #000;
+		text-align: center;
+	}
+	#lebuttons div{
+		display: inline-block;
+		width: 30%;
+		height: 27px;
+		border:1px solid #000;
+		cursor: pointer;
+	}
+	#btn_1{background-color: #B03E3E;}
+	#btn_2{background-color: #B0B13E;}
+	#btn_3{background-color: #40B03E;}
+	#btn_4{background-color: #B07B3E;}
+	#btn_5{background-color: #463EB0;}
+	#btn_6{background-color: #B03E93;}
 </style>
