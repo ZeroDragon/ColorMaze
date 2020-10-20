@@ -1,9 +1,24 @@
 <html>
 	<head>
-		<script type="text/javascript" src="jquery.js"></script>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  
 	  <script type="application/javascript">
-	  	Object.prototype.clone = function() {
+			var cuadro = 380;
+			var factor = 3;
+			var home = 10;
+			var colores = [];
+			colores[0]="#330000"; //rojo kemado
+			colores[1]="#B03E3E"; //rosado
+			colores[2]="#B0B13E"; //amarillo
+			colores[3]="#40B03E"; //verde
+			colores[4]="#B07B3E"; //naranja
+			colores[5]="#463EB0"; //azul
+			colores[6]="#B03E93"; //morado
+			var truefalse = [];
+			var aha = [];
+			var intentos = 0;
+			var maximo = 0;
+
+			Object.prototype.clone = function() {
 			  var newObj = (this instanceof Array) ? [] : {};
 			  for (i in this) {
 			    if (i == 'clone') continue;
@@ -12,201 +27,176 @@
 			    } else newObj[i] = this[i]
 			  } return newObj;
 			};
+
 			Array.max = function( array ){
 			    return Math.max.apply( Math, array );
 			};
-
-	  	ColorMaze = {
-				cuadro : 380,
-				factor : 3,
-				home : 10,
-				colores : [
-					"#330000", //rojo kemado
-					"#B03E3E", //rosado
-					"#B0B13E", //amarillo
-					"#40B03E", //verde
-					"#B07B3E", //naranja
-					"#463EB0", //azul
-					"#B03E93" //morado
-				],
-				truefalse : [],
-				aha : [],
-				intentos : 0,
-				maximo : 0,
-				generatemaze : function(){
-					var xDimensions = this.factor;
-					var yDimensions = this.factor;
-					var someArray = [];
-					for (var xLoop=0; xLoop<xDimensions; xLoop++) {
-						someArray[xLoop] = [];
-						this.truefalse[xLoop] = [];
-						for (var yLoop=0; yLoop<yDimensions; yLoop++) {
-							var randomnumber=Math.floor(Math.random()*6);
-							someArray[xLoop][yLoop] = randomnumber+1;
-							this.truefalse[xLoop][yLoop] = 0;
-						}
+			function generatemaze(){
+				var xDimensions = factor;
+				var yDimensions = factor;
+				var someArray = [];
+				for (var xLoop=0; xLoop<xDimensions; xLoop++) {
+					someArray[xLoop] = [];
+					truefalse[xLoop] = [];
+					for (var yLoop=0; yLoop<yDimensions; yLoop++) {
+						var randomnumber=Math.floor(Math.random()*6);
+						someArray[xLoop][yLoop] = randomnumber+1;
+						truefalse[xLoop][yLoop] = 0;
 					}
-					someArray[Math.floor((this.factor-1)/2)][Math.floor((this.factor-1)/2)] = 0;
-					someArray[Math.floor((this.factor)/2)][Math.floor((this.factor)/2)] = 0;
-					return someArray;
-				},
-				draw : function(maze) {
-					var canvas = $('#canvas')[0]; 
-					var grid = $('#grid')[0];
-					var valid = $('#valid')[0];
-					if (canvas.getContext) {  
-						var C = canvas.getContext("2d");
-						var G = grid.getContext("2d");
-						var V = valid.getContext("2d");
-						this.valida(maze);
-						tamano = this.cuadro/this.factor;
-						iniciaY = this.home;
-						for(var ver=0; ver<this.factor; ver++){
-							iniciaX = this.home;
-							for(var hor=0; hor<this.factor; hor++){
-								C.fillStyle = this.colores[maze[hor][ver]];  
-								C.fillRect (iniciaX, iniciaY, tamano, tamano);
-								G.strokeStyle = this.colores[maze[hor][ver]]; 
-								G.strokeRect (iniciaX, iniciaY, tamano, tamano);
-								G.fillText (maze[hor][ver],iniciaX+4,iniciaY+tamano/2);
-								V.fillStyle = "#000000";
-								V.strokeRect (iniciaX, iniciaY, tamano, tamano);
-								if(this.truefalse[hor][ver]==2){
-									V.fillStyle = "#CCCCCC";
-									V.fillRect(iniciaX, iniciaY, tamano, tamano);
-								}
-								if(this.truefalse[hor][ver]==1){
-									V.fillStyle = "#000000";
-									V.fillRect(iniciaX, iniciaY, tamano, tamano);
-									C.fillStyle = this.colores[0];
-									C.strokeStyle = this.colores[0];
-									C.fillRect (iniciaX-1, iniciaY-1, tamano+2, tamano+2);
-								}
-								iniciaX = iniciaX+tamano;
-							}
-							iniciaY = iniciaY+tamano;
-						}
-					}
-					$('#elmejor').html(this.elmejor(maze,this.truefalse));
-					return maze;
-				},
-				valida : function(maze) {
-					for(var ekis=0; ekis<this.factor; ekis++){
-						for(var ye=0; ye<this.factor; ye++){
-							if(maze[ekis][ye]==0){
-								if((ye!=this.factor-1)&&(this.truefalse[ekis][ye+1]!=1))
-									this.truefalse[ekis][ye+1] = 2;
-								if((ye!=0)&&(this.truefalse[ekis][ye-1]!=1))
-									this.truefalse[ekis][ye-1] = 2;
-								if((ekis!=0)&&(this.truefalse[ekis-1][ye]!=1))
-									this.truefalse[ekis-1][ye] = 2;
-								if((ekis!=this.factor-1)&&(this.truefalse[ekis+1][ye]!=1))
-									this.truefalse[ekis+1][ye] = 2;
-								this.truefalse[ekis][ye] = 1;
-							}
-						}
-					}
-				},
-				elmejor: function(maze,truefalse){
-					var cholor = [];
-					for(var color=1; color<=6; color++){
-						cholor[color] = this.elige(color,maze.clone(),truefalse.clone());
-					}
-					biggest = 1
-					for (x=1;x<=6;x++){
-						if (cholor[x]>cholor[biggest]){
-							biggest = x;
-						}
-					}
-					return biggest;
-				},
-				elige: function(color,maze2,truefalse2){
-					var cuentale = 0;
-					for(var ekis=0; ekis<this.factor; ekis++){
-						for(var ye=0; ye<this.factor; ye++){
-							if(truefalse2[ekis][ye]==2){
-								if(maze2[ekis][ye]==color){
-									var cambio = true;
-									cuentale ++;
-									if((ye!=this.factor-1)&&(truefalse2[ekis][ye+1]!=1))
-										truefalse2[ekis][ye+1]=2;
-									if((ye!=0)&&(truefalse2[ekis][ye-1]!=1))
-										truefalse2[ekis][ye-1]=2;
-									if((ekis!=0)&&(truefalse2[ekis-1][ye]!=1))
-										truefalse2[ekis-1][ye]=2;
-									if((ekis!=this.factor-1)&&(truefalse2[ekis+1][ye]!=1))
-										truefalse2[ekis+1][ye]=2;
-									truefalse2[ekis][ye]=1;
-									cuentale = cuentale + this.elige(color,maze2,truefalse2);
-								}
-							}
-						}
-					}
-					return cuentale;
-				},
-				include : function(arr,obj) {
-				    return (arr.indexOf(obj) != -1);
-				},
-				ganamosquestionmark : function(truefalse){
-					for(var ekis=0; ekis<this.factor; ekis++){
-						if(this.include(truefalse[ekis],2)) return false;
-					}
-					return true;
-				},
-				limpia: function(){
-					var canvas = $('#canvas')[0];//document.getElementById("canvas");  
-					var grid = $('#grid')[0];//document.getElementById("grid");
-					var valid = $('#valid')[0];//document.getElementById("valid");
+				}
+				someArray[Math.floor((factor-1)/2)][Math.floor((factor-1)/2)] = 0;
+				someArray[Math.floor((factor)/2)][Math.floor((factor)/2)] = 0;
+				return someArray;
+			}
+			function draw(maze) {  
+				var canvas = document.getElementById("canvas");  
+				var grid = document.getElementById("grid");
+				var valid = document.getElementById("valid");
+				if (canvas.getContext) {  
 					var C = canvas.getContext("2d");
 					var G = grid.getContext("2d");
 					var V = valid.getContext("2d");
-					C.clearRect(this.home,this.home,this.cuadro,this.cuadro);
-					G.clearRect(this.home,this.home,this.cuadro,this.cuadro);
-					V.clearRect(this.home,this.home,this.cuadro,this.cuadro);
-				},
-				simondice : function(color){
-					this.intentos ++;
-					$('#llevas').html(this.intentos);
-					$('#quedan').html(this.maximo-this.intentos);
-					this.elige(color,this.aha,this.truefalse);
-					this.aha = this.draw(this.aha);
-					if (this.ganamosquestionmark(this.truefalse)){
-						if (this.intentos<=this.maximo){
-							this.factor ++;
-							alert('Felicidades! Avanza a nivel: '+this.factor);
-							this.limpia();
-							this.init();
-						}else{
-							alert('FAIL! Intenta de nuevo');
-							this.limpia();
-							this.init();
+					valida(maze);
+					tamano = cuadro/factor;
+					iniciaY = home;
+					for(var ver=0; ver<factor; ver++){
+						iniciaX = home;
+						for(var hor=0; hor<factor; hor++){
+							C.fillStyle = colores[maze[hor][ver]];  
+							C.fillRect (iniciaX, iniciaY, tamano, tamano);
+							G.strokeStyle = colores[maze[hor][ver]]; 
+							G.strokeRect (iniciaX, iniciaY, tamano, tamano);
+							G.fillText (maze[hor][ver],iniciaX+4,iniciaY+tamano/2);
+							V.fillStyle = "#000000";
+							V.strokeRect (iniciaX, iniciaY, tamano, tamano);
+							if(truefalse[hor][ver]==2){
+							V.fillStyle = "#CCCCCC";
+							V.fillRect(iniciaX, iniciaY, tamano, tamano);
+							}
+							if(truefalse[hor][ver]==1){
+							V.fillStyle = "#000000";
+							V.fillRect(iniciaX, iniciaY, tamano, tamano);
+							C.fillStyle = colores[0];
+							C.strokeStyle = colores[0];
+							C.fillRect (iniciaX-1, iniciaY-1, tamano+2, tamano+2);
+							}
+							iniciaX = iniciaX+tamano;
+						}
+						iniciaY = iniciaY+tamano;
+					}
+				}
+				document.getElementById("elmejor").innerHTML = elmejor(maze,truefalse);
+				return maze;
+			}
+
+			function valida(maze) {
+				for(var ekis=0; ekis<factor; ekis++){
+					for(var ye=0; ye<factor; ye++){
+						if(maze[ekis][ye]==0){
+							if((ye!=factor-1)&&(truefalse[ekis][ye+1]!=1)){truefalse[ekis][ye+1] = 2;}
+							if((ye!=0)&&(truefalse[ekis][ye-1]!=1)){truefalse[ekis][ye-1] = 2;}
+							if((ekis!=0)&&(truefalse[ekis-1][ye]!=1)){truefalse[ekis-1][ye] = 2;}
+							if((ekis!=factor-1)&&(truefalse[ekis+1][ye]!=1)){truefalse[ekis+1][ye] = 2;}	
+							truefalse[ekis][ye] = 1;
 						}
 					}
-				},
-				autoplay : function(aha2,truefalse2){
-					this.maximo = 1;
-					newaha = aha2.clone();
-					newtruefalse = truefalse2.clone();
-					opcion = this.elmejor(newaha,newtruefalse);
-					this.elige(opcion,newaha,newtruefalse);
-					if(this.ganamosquestionmark(newtruefalse)==false){
-						this.maximo = this.maximo + this.autoplay(newaha,newtruefalse);
-					}
-					return this.maximo;
-				},
-				init: function(){
-					this.aha = this.draw(this.generatemaze());
-					this.intentos = 0;
-					this.maximo = this.autoplay(this.aha,this.truefalse);
-					$('#llevas').html(this.intentos);
-					$('#quedan').html(this.maximo-this.intentos);
-					$('#nivel').html(this.factor-2);
 				}
 			}
 
-			$(document).ready(function(){
-				ColorMaze.init();
-			});
+			function elmejor(maze,truefalse){
+				var cholor = [];
+				for(var color=1; color<=6; color++){
+					cholor[color] = elige(color,maze.clone(),truefalse.clone());
+				}
+				biggest = 1
+				for (x=1;x<=6;x++){
+					if (cholor[x]>cholor[biggest]){
+						biggest = x;
+					}
+				}
+				return(biggest);
+			}
+
+			function elige(color,maze2,truefalse2){
+				var cuentale = 0;
+				for(var ekis=0; ekis<factor; ekis++){
+					for(var ye=0; ye<factor; ye++){
+						if(truefalse2[ekis][ye]==2){
+							if(maze2[ekis][ye]==color){
+								var cambio = true;
+								cuentale ++;
+								if((ye!=factor-1)&&(truefalse2[ekis][ye+1]!=1)){truefalse2[ekis][ye+1]=2;}
+								if((ye!=0)&&(truefalse2[ekis][ye-1]!=1)){truefalse2[ekis][ye-1]=2;}
+								if((ekis!=0)&&(truefalse2[ekis-1][ye]!=1)){truefalse2[ekis-1][ye]=2;}
+								if((ekis!=factor-1)&&(truefalse2[ekis+1][ye]!=1)){truefalse2[ekis+1][ye]=2;}
+								truefalse2[ekis][ye]=1;
+								cuentale = cuentale + elige(color,maze2,truefalse2);
+							}
+						}
+					}
+				}
+				return cuentale;
+			}
+			function include(arr,obj) {
+			    return (arr.indexOf(obj) != -1);
+			}
+
+			function ganamosquestionmark(truefalse){
+				var salida = true;
+				for(var ekis=0; ekis<factor; ekis++){
+					if (include(truefalse[ekis],2)){salida = false;}
+				}
+				return salida;
+			}
+			function limpia(){
+				var canvas = document.getElementById("canvas");  
+				var grid = document.getElementById("grid");
+				var valid = document.getElementById("valid");
+				var C = canvas.getContext("2d");
+				var G = grid.getContext("2d");
+				var V = valid.getContext("2d");
+				C.clearRect(home,home,cuadro,cuadro);
+				G.clearRect(home,home,cuadro,cuadro);
+				V.clearRect(home,home,cuadro,cuadro);
+			}
+			function simondice(color){
+				intentos ++;
+				document.getElementById("llevas").innerHTML = intentos;
+				document.getElementById("quedan").innerHTML = maximo-intentos;
+				elige(color,aha,truefalse);
+				aha = draw(aha);
+				if (ganamosquestionmark(truefalse)){
+					if (intentos<=maximo){
+						factor ++;
+						alert('Felicidades! Avanza a nivel: '+factor - 2);
+						limpia();
+						dispara();
+					}else{
+						alert('FAIL! Intenta de nuevo');
+						limpia();
+						dispara();
+					}
+				}
+			}
+			function autoplay(aha2,truefalse2){
+				maximo = 1;
+				newaha = aha2.clone();
+				newtruefalse = truefalse2.clone();
+				opcion = elmejor(newaha,newtruefalse);
+				elige(opcion,newaha,newtruefalse);
+				if(ganamosquestionmark(newtruefalse)==false){
+					maximo = maximo + autoplay(newaha,newtruefalse);
+				}
+				return maximo;
+			}
+			function dispara(){
+				aha = draw(generatemaze());
+				intentos = 0;
+				maximo = autoplay(aha,truefalse);
+				document.getElementById("llevas").innerHTML = intentos;
+				document.getElementById("quedan").innerHTML = maximo-intentos;
+				document.getElementById("nivel").innerHTML = factor-2;
+			}
 	  </script> 
 		<style type="text/css">
 		canvas{
@@ -220,7 +210,6 @@
 			padding: 0px;
 			width:132px;
 			height:40px;
-			cursor: pointer;
 		}
 		table{
 			width:400px;	
@@ -231,7 +220,7 @@
 		}
 		</style>  
 	</head>
-	<body>  
+	<body onload="dispara();">  
 		<canvas id="canvas" width="400" height="400"></canvas> 
 		<canvas id="grid" width="400" height="400"></canvas>
 		<canvas id="valid" width="400" height="400"></canvas><br>
@@ -240,11 +229,6 @@
 		Intentos: <span id="llevas">0</span>
 		Restantes: <span id="quedan">5</span></td><td></td><td align="right">
 		Nivel: <span id="nivel">1</span></td></tr></tbody></table>
-		<input type="button" style="background-color:#B03E3E;" onclick="ColorMaze.simondice(1)">
-		<input type="button" style="background-color:#B0B13E;" onclick="ColorMaze.simondice(2)">
-		<input type="button" style="background-color:#40B03E;" onclick="ColorMaze.simondice(3)"><br>
-		<input type="button" style="background-color:#B07B3E;" onclick="ColorMaze.simondice(4)">
-		<input type="button" style="background-color:#463EB0;" onclick="ColorMaze.simondice(5)">
-		<input type="button" style="background-color:#B03E93;" onclick="ColorMaze.simondice(6)">   
+		<input type="button" style="background-color:#B03E3E;" onclick="simondice(1)"><input type="button" style="background-color:#B0B13E;" onclick="simondice(2)"><input type="button" style="background-color:#40B03E;" onclick="simondice(3)"><br><input type="button" style="background-color:#B07B3E;" onclick="simondice(4)"><input type="button" style="background-color:#463EB0;" onclick="simondice(5)"><input type="button" style="background-color:#B03E93;" onclick="simondice(6)">   
 	</body>
 </html>

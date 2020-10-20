@@ -114,7 +114,7 @@ var ColorMaze = {
 			}
 			if(this.theMaze[x+1][y] == colorActual) elmaze = this.buscaValids(x+1,y,elmaze,colorActual);
 		}
-		//buscamos en -x
+		// buscamos en -x
 		if((y-1)>=0 && elmaze[x][y-1]=='blank'){
 			if(color!==false){
 				colorActual = color;
@@ -152,7 +152,7 @@ var ColorMaze = {
 		}
 		var nivelActual = this.factor()+1;
 		if(retval==true){
-			alert('Ganaste!. Avanza a nivel: '+nivelActual);
+			alert('Ganaste!. Avanza a nivel: '+nivelActual - 2);
 			this.savesession({user:'guest',level:nivelActual});
 		}
 	},
